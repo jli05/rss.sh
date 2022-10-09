@@ -39,5 +39,5 @@ then
 else
   DATE=$(date -I -d $1)
 fi
-cat $FILE|sed '/^#/d'|xargs -n 1 -I {} sh -c "curl -sS {}|python3 $SCRIPT"|awk -F '\t' -v date=$DATE '$1 ~ /....-..-../ && $1 >= date'|sort -t '\t' -k 1 -r|uniq|awk -F '\t' 'BEGIN { } { print "<h3>" $2 "</h3><p><a href=\"" $3 "\">" $3 "</a> " $1 "</p>" } END { print "</html>" }' >>$OUTPUT
+cat $FILE|sed '/^#/d'|xargs -n 1 -I {} sh -c "curl -sS \"{}\"|python3 $SCRIPT"|awk -F '\t' -v date=$DATE '$1 ~ /....-..-../ && $1 >= date'|sort -t '\t' -k 1 -r|uniq|awk -F '\t' 'BEGIN { } { print "<h5>" $2 "</h5><p><a href=\"" $3 "\">" $3 "</a> " $1 "</p>" } END { print "</html>" }' >>$OUTPUT
 cp $OUTPUT /tmp/rss.html; open /tmp/rss.html
