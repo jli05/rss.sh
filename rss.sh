@@ -15,15 +15,19 @@ cat >$FILE <<EOF
 EOF
 
 cat >$SCRIPT <<EOF
-from sys import stdin
+from sys import stdin, stderr
 import xml.etree.ElementTree as ET
-tree = ET.fromstring(''.join(stdin.readlines()))
+tree = ET.fromstring(stdin.read())
 
 from pandas import to_datetime
+n = 0
 for item in tree.iter('item'):
     print(str(to_datetime(item.find('pubDate').text)), end='\t')
     print(item.find('title').text, end='\t')
     print(item.find('link').text)
+    n += 1
+if not n:
+    print('0 items', file=stderr)
 EOF
 
 cat >$OUTPUT <<EOF
@@ -39,5 +43,19 @@ then
 else
   DATE=$(date -I -d $1)
 fi
-cat $FILE|sed '/^#/d'|xargs -n 1 -I {} sh -c "curl -sS \"{}\"|python3 $SCRIPT"|awk -F '\t' -v date=$DATE '$1 ~ /....-..-../ && $1 >= date'|sort -t '\t' -k 1 -r|uniq|awk -F '\t' 'BEGIN { } { print "<p><b>" $2 "</b><br><a href=\"" $3 "\">" $3 "</a><br>" $1 "</p>" } END { print "</html>" }' >>$OUTPUT
+
+
+IFS=
+while read -r line
+do
+  if [ -z "$line" ]
+  then
+    continue
+  fi
+  case "$line" in
+    (\#*) continue ;;
+  esac
+  echo "$line" >&2
+  curl -sS "$line"|python3 $SCRIPT
+done <$FILE|awk -F '\t' -v date=$DATE '$1 ~ /....-..-../ && $1 >= date'|sort -t '\t' -k 1 -r|uniq|awk -F '\t' 'BEGIN { } { print "<p><b>" $2 "</b><br><a href=\"" $3 "\">" $3 "</a><br>" $1 "</p>" } END { print "</html>" }' >>$OUTPUT
 cp $OUTPUT /tmp/rss.html; open /tmp/rss.html
