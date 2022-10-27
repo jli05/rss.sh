@@ -56,6 +56,6 @@ do
     (\#*) continue ;;
   esac
   echo "$line" >&2
-  curl -sS "$line"|python3 $SCRIPT
+  curl -sSL "$line"|python3 $SCRIPT
 done <$FILE|awk -F '\t' -v date=$DATE '$1 ~ /....-..-../ && $1 >= date'|sort -t '\t' -k 1 -r|uniq|awk -F '\t' 'BEGIN { } { print "<p><b>" $2 "</b><br><a href=\"" $3 "\">" $3 "</a><br>" $1 "</p>" } END { print "</html>" }' >>$OUTPUT
 cp $OUTPUT /tmp/rss.html; open /tmp/rss.html
