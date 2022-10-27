@@ -27,7 +27,7 @@ for item in tree.iter('item'):
     print(item.find('link').text)
     n += 1
 if not n:
-    print('0 items', file=stderr)
+    print('warning: zero items', file=stderr)
 EOF
 
 cat >$OUTPUT <<EOF
