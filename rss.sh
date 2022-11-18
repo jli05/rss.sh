@@ -19,13 +19,23 @@ from sys import stdin, stderr
 import xml.etree.ElementTree as ET
 tree = ET.fromstring(stdin.read())
 
+NS = {'atom': 'http://www.w3.org/2005/Atom'}
 from pandas import to_datetime
 n = 0
-for item in tree.iter('item'):
-    print(str(to_datetime(item.find('pubDate').text)), end='\t')
-    print(item.find('title').text, end='\t')
-    print(item.find('link').text)
-    n += 1
+if tree.tag.endswith('rss'):
+    for item in tree.iter('item'):
+        print(str(to_datetime(item.find('pubDate').text)), end='\t')
+        print(item.find('title').text, end='\t')
+        print(item.find('link').text)
+        n += 1
+elif tree.tag.endswith('feed'):
+    for item in tree.iterfind('atom:entry', NS):
+        print(str(to_datetime(item.find('atom:updated', NS).text)), end='\t')
+        print(item.find('atom:title', NS).text, end='\t')
+        print(item.find('atom:link', NS).attrib['href'])
+        n += 1
+else:
+    raise NotImplementedError(tree.tag)
 if not n:
     print('warning: 0 items', file=stderr)
 EOF
