@@ -27,7 +27,7 @@ for item in tree.iter('item'):
     print(item.find('link').text)
     n += 1
 if not n:
-    print('warning: zero items', file=stderr)
+    print('warning: 0 items', file=stderr)
 EOF
 
 cat >$OUTPUT <<EOF
@@ -57,5 +57,5 @@ do
   esac
   echo "$line" >&2
   curl -sSL "$line"|python3 $SCRIPT
-done <$FILE|awk -F '\t' -v date=$DATE '$1 ~ /....-..-../ && $1 >= date'|sort -t '\t' -k 1 -r|uniq|awk -F '\t' 'BEGIN { } { print "<p><b>" $2 "</b><br><a href=\"" $3 "\">" $3 "</a><br>" $1 "</p>" } END { print "</html>" }' >>$OUTPUT
+done <$FILE|awk -F '\t' -v date=$DATE '$1 ~ /....-..-../ && $1 >= date'|sort -t '\t' -k 1 -r|uniq|awk -F '\t' 'BEGIN { } { print "<p><a href=\"" $3 "\" target=\"_blank\">" $2 "</a> " $1 "</p>" } END { print "</html>" }' >>$OUTPUT
 cp $OUTPUT /tmp/rss.html; open /tmp/rss.html
