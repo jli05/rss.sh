@@ -6,10 +6,14 @@ then
   exit 2
 fi
 
+#S3_URI="<uri>"
+#SNS_TOPIC="<topic_arn>"
+
 FILE=$(mktemp /tmp/rss.urls.XXXXXX)
 SCRIPT=$(mktemp /tmp/rss.py.XXXXXX)
 OUTPUT=$(mktemp /tmp/rss.txt.XXXXXX)
 ERROR=$(mktemp /tmp/rss.err.XXXXXX)
+OUTPUT_DIR=$(mktemp -d /tmp/rss.XXXXXX)
 
 cat >$FILE <<EOF
 # Add your RSS feed URLs here
@@ -46,7 +50,8 @@ if [ $(uname) = "Darwin" ]
 then
   DATE=$(date -j -v $1 '+%Y-%m-%d')
 else
-  DATE=$(date -I -d $1)
+  OFFS=$(echo $1|sed 's/d$/ days/')
+  DATE=$(date -I -d "$OFFS")
 fi
 
 
@@ -65,4 +70,12 @@ do
 done <$FILE 2>>$ERROR|awk -F '\t' -v date=$DATE '$1 >= date'|sort -t '\t' -k 1 -r|uniq|awk -F '\t' '{ print $2; print $3; print $1; print " " }' >>$OUTPUT
 
 cat $ERROR >>$OUTPUT
-cp $OUTPUT $(dirname $0)/rss.txt
+cp $OUTPUT $OUTPUT_DIR/rss.txt
+if [ -n "$S3_URI" ]
+then
+  aws s3 sync $OUTPUT_DIR $S3_URI
+fi
+if [ -n "$SNS_TOPIC" ]
+then
+  aws sns publish --topic-arn $SNS_TOPIC --subject "rss" --message file://$OUTPUT
+fi
