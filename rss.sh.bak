@@ -8,8 +8,7 @@ fi
 
 FILE=$(mktemp /tmp/rss.urls.XXXXXX)
 SCRIPT=$(mktemp /tmp/rss.py.XXXXXX)
-OUTPUT=$(mktemp /tmp/rss.txt.XXXXXX)
-ERROR=$(mktemp /tmp/rss.err.XXXXXX)
+OUTPUT=$(mktemp /tmp/rss.html.XXXXXX)
 
 cat >$FILE <<EOF
 # Add your RSS feed URLs here
@@ -41,6 +40,12 @@ if not n:
     print('warning: 0 items', file=stderr)
 EOF
 
+cat >$OUTPUT <<EOF
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="utf-8">
+<link rel="stylesheet" href="https://cdn.simplecss.org/simple.min.css">
+EOF
 
 if [ $(uname) = "Darwin" ]
 then
@@ -62,7 +67,5 @@ do
   esac
   echo "$line" >&2
   curl -sSL "$line"|python3 $SCRIPT
-done <$FILE 2>>$ERROR|awk -F '\t' -v date=$DATE '$1 >= date'|sort -t '\t' -k 1 -r|uniq|awk -F '\t' '{ print $2; print $3; print $1; print " " }' >>$OUTPUT
-
-cat $ERROR >>$OUTPUT
-cp $OUTPUT $(dirname $0)/rss.txt
+done <$FILE|awk -F '\t' -v date=$DATE '$1 >= date'|sort -t '\t' -k 1 -r|uniq|awk -F '\t' 'BEGIN { } { print "<p><a href=\"" $3 "\" target=\"_blank\">" $2 "</a> " $1 "</p>" } END { print "</html>" }' >>$OUTPUT
+cp $OUTPUT /tmp/rss.html; open /tmp/rss.html
