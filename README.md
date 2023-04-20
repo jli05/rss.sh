@@ -24,6 +24,13 @@ rss.sh -10d
 
 it would generate a HTML and open it in the browser.
 
+## cacert
+If prompted, download `cacert.pem`, then create `~/.curlrc` with the following line:
+
+```
+cacert = <path_to_cacert.pem>
+```
+
 ## The Format of Feed XML It Expects
 
 Taken from [https://vitalik.ca/feed.xml](https://vitalik.ca/feed.xml),
