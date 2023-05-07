@@ -6,9 +6,11 @@
 #S3_URI="<uri>"
 #SNS_TOPIC="<topic_arn>"
 
-FILE=$(mktemp /tmp/rss.urls.XXXXXX)
-OUTPUT=$(mktemp /tmp/rss.txt.XXXXXX)
-ERROR=$(mktemp /tmp/rss.err.XXXXXX)
+PROJDIR=$(dirname $0)
+
+FILE=$(mktemp /tmp/urls.XXXXXX.txt)
+OUTPUT=$(mktemp /tmp/rss.XXXXXX.txt)
+ERROR=$(mktemp /tmp/rss.XXXXXX.err)
 OUTPUT_DIR=$(mktemp -d /tmp/rss.XXXXXX)
 
 cat >$FILE <<EOF
@@ -27,7 +29,7 @@ then
   DATE_FLAG=--since=$DATE
 fi
 
-cat $FILE|python3 rss.py $DATE_FLAG 2>>$ERROR >>$OUTPUT
+cat $FILE|python3 $PROJDIR/rss.py $DATE_FLAG 2>>$ERROR >>$OUTPUT
 
 cat $ERROR >>$OUTPUT
 cp $OUTPUT $OUTPUT_DIR/rss.txt
