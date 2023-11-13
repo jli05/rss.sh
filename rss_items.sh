@@ -1,5 +1,11 @@
 #!/bin/sh
 
+# usage:
+#
+#   WGET="" SINCE="" rss_items.sh url
+#
+# download and print RSS items from a single URL
+
 if [ $# -ne 1 ]
 then
   echo "usage: $0 url" >&2

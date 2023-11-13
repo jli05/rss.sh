@@ -1,7 +1,10 @@
 #!/bin/sh
 
-#S3_URI="<uri>"
-#SNS_TOPIC="<topic_arn>"
+# usage:
+#
+#   cat urls.txt | WGET="" SINCE="" S3_URI="" SNS_TOPIC="" rss.sh
+#
+# batch download and print RSS items
 
 if [ -n "$NPROC" ]
 then

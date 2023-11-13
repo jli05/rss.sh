@@ -2,27 +2,25 @@
 
 ## Introduction
 
-Given a list of RSS feed URLs, `rss.sh` retrieve them and make a HTML for the posts, the most recent first.
+Given a list of RSS feed URLs, `rss.sh` gets the RSS entries.
 
-### Bring Your Own URLs
+## Usage
 
-Edit `rss.sh` and insert the feed URLs, for example
+Edit `urls.txt` and insert the feed URLs, for example
 
 ```sh
-cat >$FILE <<EOF
 # Add your RSS feed URLs here
 https://blog.regehr.org/feed
 https://api.quantamagazine.org/feed/
-EOF
 ```
 
-To retrieve the blog posts in the last 10 days,
+To get the title, URL and dates of the blog posts in the above URLs, and sync to S3 or publish to SNS,
 
 ```sh
-rss.sh -10d
+cat urls.txt | NPROC=$(nproc) WGET='wget -q -O -' SINCE='' S3_URI='' SNS_TOPIC='' rss.sh
 ```
 
-it would generate a .txt file and send to S3 and via SNS.
+If using `curl`, use `WGET='curl -sSL'` instead. `WGET` and `SINCE` are obligatory. If neither `S3_URI` or `SNS_TOPIC` is provided, the results will be printed to `stdout`.
 
 ## The Format of Feed XML It Expects
 
