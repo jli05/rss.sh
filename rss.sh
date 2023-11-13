@@ -1,43 +1,33 @@
 #!/bin/sh
 
-# usage:
-#   rss.sh [-<nnn>d]
-
 #S3_URI="<uri>"
 #SNS_TOPIC="<topic_arn>"
 
-PROJDIR=$(dirname $0)
-
-FILE=$(mktemp /tmp/urls.XXXXXX.txt)
-OUTPUT=$(mktemp /tmp/rss.XXXXXX.txt)
-ERROR=$(mktemp /tmp/rss.XXXXXX.err)
-OUTPUT_DIR=$(mktemp -d /tmp/rss.XXXXXX)
-
-cat >$FILE <<EOF
-# Add your RSS feed URLs here
-EOF
-
-if [ $# -eq 1 ]
+if [ -n "$NPROC" ]
 then
-  if [ $(uname) = "Darwin" ]
+  JOBS_FLAG="-P $NPROC"
+fi
+
+PROJDIR="$(dirname $0)"
+OUTPUT=$(mktemp /tmp/rss.txt.XXXXXX)
+ERROR=$(mktemp /tmp/rss.err.XXXXXX)
+
+cat - | sed -e '/^[[:space:]]*#/d' -e '/^[[:space:]]*$/d' | WGET="$WGET" SINCE="$SINCE" xargs -n 1 $JOBS_FLAG "$PROJDIR"/rss_items.sh 2>>$ERROR >>$OUTPUT
+
+if [ -z "$S3_URI" -a -z "$SNS_TOPIC" ]
+then
+  cat $OUTPUT
+  cat $ERROR >&2
+else
+  if [ -n "$S3_URI" ]
   then
-    DATE=$(date -j -v $1 '+%Y-%m-%d')
-  else
-    OFFS=$(echo $1|sed 's/d$/ days/')
-    DATE=$(date -I -d "$OFFS")
+    OUTPUT_DIR=$(mktemp -d /tmp/rss.XXXXXX)
+    cp $OUTPUT $ERROR $OUTPUT_DIR
+    aws s3 sync $OUTPUT_DIR $S3_URI
   fi
-  DATE_FLAG=--since=$DATE
-fi
-
-cat $FILE|python3 $PROJDIR/rss.py $DATE_FLAG 2>>$ERROR >>$OUTPUT
-
-cat $ERROR >>$OUTPUT
-cp $OUTPUT $OUTPUT_DIR/rss.txt
-if [ -n "$S3_URI" ]
-then
-  aws s3 sync $OUTPUT_DIR $S3_URI
-fi
-if [ -n "$SNS_TOPIC" ]
-then
-  aws sns publish --topic-arn $SNS_TOPIC --subject "rss" --message file://$OUTPUT
+  if [ -n "$SNS_TOPIC" ]
+  then
+    cat $ERROR >>$OUTPUT
+    aws sns publish --topic-arn $SNS_TOPIC --subject "rss" --message file://$OUTPUT
+  fi
 fi

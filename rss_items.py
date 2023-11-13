@@ -1,17 +1,13 @@
 ''' Read RSS entries from a list of URLs '''
 
 
-def read_rss_entries(url):
+def read_rss_entries(text):
     ''' Read RSS entries from given URL '''
     entries = []
 
-    from warnings import warn
     try:
-        from subprocess import Popen, PIPE
-        proc = Popen(['curl', '-L', '-sS', url], text=True, stdout=PIPE)
-
         import xml.etree.ElementTree as ET
-        tree = ET.fromstring(proc.stdout.read())
+        tree = ET.fromstring(text.strip())
 
         NS = {'atom': 'http://www.w3.org/2005/Atom'}
         from pandas import to_datetime
@@ -31,11 +27,11 @@ def read_rss_entries(url):
             raise NotImplementedError(tree.tag)
     except:
         import traceback
-        warn(url)
         traceback.print_exc()
 
     if not entries:
-        warn(f'{url}: 0 items')
+        from warnings import warn
+        warn('no items')
     return entries
 
 
@@ -43,23 +39,19 @@ if __name__ == '__main__':
     from argparse import ArgumentParser
     parser = ArgumentParser()
     parser.add_argument('--since')
-    parser.add_argument('file', nargs='*',
-                        help='file with URLs, one on each line')
+    parser.add_argument('file', nargs='?',
+                        help="when ignored or '-' for stdin")
     args = parser.parse_args()
 
-    import fileinput
-    urls = [line.strip() for line in fileinput.input(args.file)]
-    urls = [url for url in urls
-            if url and not url.startswith('#')]
+    if args.file and args.file != '-':
+        with open(args.file) as f:
+            text = f.read().strip()
+    else:
+        from sys import stdin
+        text = stdin.read().strip()
 
-    from functools import reduce
-    entries = reduce(list.__add__, map(read_rss_entries, urls))
-    entries = set(entries)
+    entries = read_rss_entries(text)
     if args.since:
         entries = filter(lambda t: t[0] >= args.since, entries)
-    entries = sorted(entries, key=lambda t: t[0], reverse=True)
     for entry in entries:
-        print(entry[1])
-        print(entry[2])
-        print(entry[0])
-        print()
+        print(f'{entry[1]}\n{entry[2]}\n{entry[0]}\n')
