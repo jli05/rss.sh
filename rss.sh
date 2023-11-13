@@ -25,7 +25,8 @@ else
   if [ -n "$S3_URI" ]
   then
     OUTPUT_DIR=$(mktemp -d /tmp/rss.XXXXXX)
-    cp $OUTPUT $ERROR $OUTPUT_DIR
+    cp $OUTPUT $OUTPUT_DIR/rss.txt
+    cp $ERROR $OUTPUT_DIR/rss.err
     aws s3 sync $OUTPUT_DIR $S3_URI
   fi
   if [ -n "$SNS_TOPIC" ]
