@@ -1,1 +1,1 @@
-0-30 06 * * * flock -n /tmp/rss -c /home/ec2-user/rss.sh/cron.sh
+0-30 06 * * * flock -n /tmp/rss -c rss.sh/cron.sh
