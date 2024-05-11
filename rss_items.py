@@ -9,7 +9,10 @@ def read_rss_entries(text):
         import xml.etree.ElementTree as ET
         tree = ET.fromstring(text.strip())
 
-        NS = {'atom': 'http://www.w3.org/2005/Atom'}
+        NS = {'atom': 'http://www.w3.org/2005/Atom',
+              'rss': 'http://purl.org/rss/1.0/',
+              'rdf': 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
+              'dc': 'http://purl.org/dc/elements/1.1/'}
         from pandas import to_datetime
         if tree.tag.endswith('rss'):                # RSS 2.0
             for item in tree.iter('item'):
@@ -17,6 +20,12 @@ def read_rss_entries(text):
                 entries.append((str(pubtime),
                                 item.find('title').text,
                                 item.find('link').text))
+        elif tree.tag.endswith('RDF'):
+            for item in tree.iterfind('rss:item', NS):
+                pubtime = to_datetime(item.find('dc:date', NS).text)
+                entries.append((str(pubtime),
+                                item.find('rss:title', NS).text,
+                                item.find('rss:link', NS).text))
         elif tree.tag.endswith('feed'):             # Atom
             for item in tree.iterfind('atom:entry', NS):
                 pubtime = to_datetime(item.find('atom:updated', NS).text)
